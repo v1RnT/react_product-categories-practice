@@ -16,7 +16,10 @@ const products = productsFromServer.map(product => {
   return { ...product, category, owner: user };
 });
 
-function getVisibleProducts(currentProds, { filterOwner, filterProductName }) {
+function getVisibleProducts(
+  currentProds,
+  { filterOwner, filterProductName, filterCategoryName },
+) {
   let visibleProducts = [...currentProds];
   const normalizedFilterProductName = filterProductName
     .toLocaleLowerCase()
@@ -36,17 +39,39 @@ function getVisibleProducts(currentProds, { filterOwner, filterProductName }) {
     });
   }
 
+  if (filterCategoryName.length) {
+    visibleProducts = visibleProducts.filter(({ category }) => {
+      return filterCategoryName.includes(category.title);
+    });
+  }
+
   return visibleProducts;
 }
 
 export const App = () => {
   const [filterOwner, setFilterOwner] = useState(DEFAULT_OWNER_VALUE);
   const [filterProductName, setFilterProductName] = useState('');
+  const [filterCategoryName] = useState([]);
 
   const visibleProducts = getVisibleProducts(products, {
     filterOwner,
     filterProductName,
+    filterCategoryName,
   });
+
+  // unfinished task 5
+
+  // const handleAddCategory = categoryName => {
+  //   setFilterCategoryName
+  // }
+
+  // const handleRemoveCategory = categoryName => {
+
+  // }
+
+  // const handleFilterCategoryName = categoryName => {
+
+  // }
 
   return (
     <div className="section">
