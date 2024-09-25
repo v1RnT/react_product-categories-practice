@@ -1,7 +1,8 @@
 /* eslint-disable jsx-a11y/accessible-emoji */
-import React from 'react';
+import React, { useState } from 'react';
 import './App.scss';
 
+import cn from 'classnames';
 import usersFromServer from './api/users';
 import categoriesFromServer from './api/categories';
 import productsFromServer from './api/products';
@@ -17,6 +18,24 @@ const products = productsFromServer.map(product => {
 });
 
 export const App = () => {
+  const [selectedUser, setSelectedUser] = useState(0);
+  const [visibleProducts, setVisibleProducts] = useState(products);
+
+  const handleUserClick = user => {
+    setSelectedUser(user);
+
+    const filteredProducts = products.filter(
+      product => product.user.id === user.id,
+    );
+
+    setVisibleProducts(filteredProducts);
+  };
+
+  const handleAllUserClick = () => {
+    setSelectedUser(0);
+    setVisibleProducts(products);
+  };
+
   return (
     <div className="section">
       <div className="container">
@@ -27,12 +46,22 @@ export const App = () => {
             <p className="panel-heading">Filters</p>
 
             <p className="panel-tabs has-text-weight-bold">
-              <a data-cy="FilterAllUsers" href="#/">
+              <a
+                data-cy="FilterAllUsers"
+                href="#/"
+                className={cn({ 'is-active': !selectedUser })}
+                onClick={() => handleAllUserClick()}
+              >
                 All
               </a>
 
               {usersFromServer.map(user => (
-                <a data-cy="FilterUser" href="#/">
+                <a
+                  data-cy="FilterUser"
+                  href="#/"
+                  className={cn({ 'is-active': selectedUser.id === user.id })}
+                  onClick={() => handleUserClick(user)}
+                >
                   {user.name}
                 </a>
               ))}
@@ -72,28 +101,15 @@ export const App = () => {
                 All
               </a>
 
-              <a
-                data-cy="Category"
-                className="button mr-2 my-1 is-info"
-                href="#/"
-              >
-                Category 1
-              </a>
-
-              <a data-cy="Category" className="button mr-2 my-1" href="#/">
-                Category 2
-              </a>
-
-              <a
-                data-cy="Category"
-                className="button mr-2 my-1 is-info"
-                href="#/"
-              >
-                Category 3
-              </a>
-              <a data-cy="Category" className="button mr-2 my-1" href="#/">
-                Category 4
-              </a>
+              {categoriesFromServer.map(category => (
+                <a
+                  data-cy="Category"
+                  className="button mr-2 my-1 is-info"
+                  href="#/"
+                >
+                  {category.title}
+                </a>
+              ))}
             </div>
 
             <div className="panel-block">
@@ -166,7 +182,7 @@ export const App = () => {
             </thead>
 
             <tbody>
-              {products.map(product => (
+              {visibleProducts.map(product => (
                 <tr data-cy="Product">
                   <td className="has-text-weight-bold" data-cy="ProductId">
                     {product.id}
