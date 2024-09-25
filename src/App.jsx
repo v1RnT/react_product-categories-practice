@@ -7,34 +7,31 @@ import usersFromServer from './api/users';
 import categoriesFromServer from './api/categories';
 import productsFromServer from './api/products';
 
+const DEFAULT_OWNER_VALUE = 'All';
+
 const products = productsFromServer.map(product => {
   const category = categoriesFromServer.find(c => c.id === product.categoryId);
   const user = usersFromServer.find(u => u.id === category.ownerId);
 
-  const genderClassName =
-    user.sex === 'm' ? 'has-text-link' : 'has-text-danger';
-
-  return { ...product, category, user, genderClassName };
+  return { ...product, category, owner: user };
 });
 
-export const App = () => {
-  const [selectedUser, setSelectedUser] = useState(0);
-  const [visibleProducts, setVisibleProducts] = useState(products);
+function getVisibleProducts(currentProds, { filterOwner }) {
+  let visibleProducts = [...currentProds];
 
-  const handleUserClick = user => {
-    setSelectedUser(user);
-
-    const filteredProducts = products.filter(
-      product => product.user.id === user.id,
+  if (filterOwner !== DEFAULT_OWNER_VALUE) {
+    visibleProducts = visibleProducts.filter(
+      ({ owner }) => owner.name === filterOwner,
     );
+  }
 
-    setVisibleProducts(filteredProducts);
-  };
+  return visibleProducts;
+}
 
-  const handleAllUserClick = () => {
-    setSelectedUser(0);
-    setVisibleProducts(products);
-  };
+export const App = () => {
+  const [filterOwner, setFilterOwner] = useState(DEFAULT_OWNER_VALUE);
+
+  const visibleProducts = getVisibleProducts(products, { filterOwner });
 
   return (
     <div className="section">
@@ -49,8 +46,10 @@ export const App = () => {
               <a
                 data-cy="FilterAllUsers"
                 href="#/"
-                className={cn({ 'is-active': !selectedUser })}
-                onClick={() => handleAllUserClick()}
+                className={cn({
+                  'is-active': filterOwner === DEFAULT_OWNER_VALUE,
+                })}
+                onClick={() => setFilterOwner(DEFAULT_OWNER_VALUE)}
               >
                 All
               </a>
@@ -58,9 +57,12 @@ export const App = () => {
               {usersFromServer.map(user => (
                 <a
                   data-cy="FilterUser"
+                  key={user.id}
                   href="#/"
-                  className={cn({ 'is-active': selectedUser.id === user.id })}
-                  onClick={() => handleUserClick(user)}
+                  className={cn({
+                    'is-active': filterOwner === user.name,
+                  })}
+                  onClick={() => setFilterOwner(user.name)}
                 >
                   {user.name}
                 </a>
@@ -103,6 +105,7 @@ export const App = () => {
 
               {categoriesFromServer.map(category => (
                 <a
+                  key={category.id}
                   data-cy="Category"
                   className="button mr-2 my-1 is-info"
                   href="#/"
@@ -183,7 +186,7 @@ export const App = () => {
 
             <tbody>
               {visibleProducts.map(product => (
-                <tr data-cy="Product">
+                <tr key={product.id} data-cy="Product">
                   <td className="has-text-weight-bold" data-cy="ProductId">
                     {product.id}
                   </td>
@@ -193,8 +196,15 @@ export const App = () => {
                     {`${product.category.icon} - ${product.category.title}`}
                   </td>
 
-                  <td data-cy="ProductUser" className={product.genderClassName}>
-                    {product.user.name}
+                  <td
+                    data-cy="ProductUser"
+                    className={
+                      product.owner.sex === 'm'
+                        ? 'has-text-link'
+                        : 'has-text-danger'
+                    }
+                  >
+                    {product.owner.name}
                   </td>
                 </tr>
               ))}
